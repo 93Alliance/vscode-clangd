@@ -6,7 +6,6 @@
     "publisher": "flywine",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
-    "icon": "icon.png",
     "engines": {
         "vscode": "^1.52.0"
     },
@@ -244,11 +243,7 @@
                 "category": "clangd",
                 "title": "Open user configuration file",
                 "icon": "$(gear)"
-            },
-            {
-				"command": "clangd.createFuncImpl",
-				"title": "Create function implement"
-			}
+            }
         ],
         "keybindings": [
             {
