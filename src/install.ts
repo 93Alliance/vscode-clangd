@@ -5,6 +5,7 @@ import * as common from '@clangd/install';
 import AbortController from 'abort-controller';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import * as os from 'os';
 
 import {ClangdContext} from './clangd-context';
 import * as config from './config';
@@ -14,7 +15,20 @@ export async function activate(
     context: ClangdContext, globalStoragePath: string,
     workspaceState: vscode.Memento): Promise<string|null> {
   // If the workspace overrides clangd.path, give the user a chance to bless it.
-  await config.getSecureOrPrompt<string>('path', workspaceState);
+  let pathKey = '';
+  switch (os.platform()) {
+    case 'linux':
+      pathKey = 'pathLinux'
+      break;
+    case 'win32':
+      pathKey = 'pathWindows'
+      break;
+    case 'darwin':
+      pathKey = 'pathMac'
+      break;
+  }
+
+  await config.getSecureOrPrompt<string>(pathKey, workspaceState);
 
   const ui = new UI(context, globalStoragePath, workspaceState);
   context.subscriptions.push(vscode.commands.registerCommand(
@@ -125,7 +139,18 @@ class UI {
   }
 
   get clangdPath(): string {
-    let p = config.getSecure<string>('path', this.workspaceState)!;
+    let p = '';
+    switch (os.platform()) {
+      case 'linux':
+        p = config.getSecure<string>('pathLinux', this.workspaceState)!;
+        break;
+      case 'win32':
+        p = config.getSecure<string>('pathWindows', this.workspaceState)!;
+        break;
+      case 'darwin':
+        p = config.getSecure<string>('pathMac', this.workspaceState)!;
+        break;
+    }
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
     if (!path.isAbsolute(p) && p.includes(path.sep) &&
@@ -134,6 +159,16 @@ class UI {
     return p;
   }
   set clangdPath(p: string) {
-    config.update('path', p, vscode.ConfigurationTarget.Global);
+    switch (os.platform()) {
+      case 'linux':
+        config.update('pathLinux', p, vscode.ConfigurationTarget.Global);
+        break;
+      case 'win32':
+        config.update('pathWindows', p, vscode.ConfigurationTarget.Global);
+        break;
+      case 'darwin':
+        config.update('pathMac', p, vscode.ConfigurationTarget.Global);
+        break;
+    }
   }
 }
