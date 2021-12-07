@@ -7,44 +7,31 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import * as os from 'os';
 
-import {ClangdContext} from './clangd-context';
+import { ClangdContext } from './clangd-context';
 import * as config from './config';
 
 // Returns the clangd path to be used, or null if clangd is not installed.
 export async function activate(
-    context: ClangdContext, globalStoragePath: string,
-    workspaceState: vscode.Memento): Promise<string|null> {
+  context: ClangdContext, globalStoragePath: string,
+  workspaceState: vscode.Memento): Promise<string | null> {
   // If the workspace overrides clangd.path, give the user a chance to bless it.
-  let pathKey = '';
-  switch (os.platform()) {
-    case 'linux':
-      pathKey = 'pathLinux'
-      break;
-    case 'win32':
-      pathKey = 'pathWindows'
-      break;
-    case 'darwin':
-      pathKey = 'pathMac'
-      break;
-  }
-
-  await config.getSecureOrPrompt<string>(pathKey, workspaceState);
+  await config.getSecureOrPrompt<string>(getClangdPathConfKey(), workspaceState);
 
   const ui = new UI(context, globalStoragePath, workspaceState);
   context.subscriptions.push(vscode.commands.registerCommand(
-      'clangd.install', async () => common.installLatest(ui)));
+    'clangd.install', async () => common.installLatest(ui)));
   context.subscriptions.push(vscode.commands.registerCommand(
-      'clangd.update', async () => common.checkUpdates(true, ui)));
+    'clangd.update', async () => common.checkUpdates(true, ui)));
   const status = await common.prepare(ui, config.get<boolean>('checkUpdates'));
   return status.clangdPath;
 }
 
 class UI {
   constructor(private context: ClangdContext, private globalStoragePath: string,
-              private workspaceState: vscode.Memento) {}
+    private workspaceState: vscode.Memento) { }
 
   get storagePath(): string { return this.globalStoragePath; }
-  async choose(prompt: string, options: string[]): Promise<string|undefined> {
+  async choose(prompt: string, options: string[]): Promise<string | undefined> {
     return await vscode.window.showInformationMessage(prompt, ...options);
   }
   slow<T>(title: string, result: Promise<T>) {
@@ -55,8 +42,8 @@ class UI {
     };
     return Promise.resolve(vscode.window.withProgress(opts, () => result));
   }
-  progress<T>(title: string, cancel: AbortController|null,
-              body: (progress: (fraction: number) => void) => Promise<T>) {
+  progress<T>(title: string, cancel: AbortController | null,
+    body: (progress: (fraction: number) => void) => Promise<T>) {
     const opts = {
       location: vscode.ProgressLocation.Notification,
       title: title,
@@ -68,7 +55,7 @@ class UI {
       let lastFraction = 0;
       return body(fraction => {
         if (fraction > lastFraction) {
-          progress.report({increment: 100 * (fraction - lastFraction)});
+          progress.report({ increment: 100 * (fraction - lastFraction) });
           lastFraction = fraction;
         }
       });
@@ -79,15 +66,15 @@ class UI {
   info(s: string) { vscode.window.showInformationMessage(s); }
   command(name: string, body: () => any) {
     this.context.subscriptions.push(
-        vscode.commands.registerCommand(name, body));
+      vscode.commands.registerCommand(name, body));
   }
 
-  async shouldReuse(release: string): Promise<boolean|undefined> {
+  async shouldReuse(release: string): Promise<boolean | undefined> {
     const message = `clangd ${release} is already installed!`;
     const use = 'Use the installed version';
     const reinstall = 'Delete it and reinstall';
     const response =
-        await vscode.window.showInformationMessage(message, use, reinstall);
+      await vscode.window.showInformationMessage(message, use, reinstall);
     if (response === use) {
       // Find clangd within the existing directory.
       return true;
@@ -112,12 +99,12 @@ class UI {
 
   async promptUpdate(oldVersion: string, newVersion: string) {
     const message = 'An updated clangd language server is available.\n ' +
-                    `Would you like to upgrade to clangd ${newVersion}? ` +
-                    `(from ${oldVersion})`;
+      `Would you like to upgrade to clangd ${newVersion}? ` +
+      `(from ${oldVersion})`;
     const update = `Install clangd ${newVersion}`;
     const dontCheck = 'Don\'t ask again';
     const response =
-        await vscode.window.showInformationMessage(message, update, dontCheck);
+      await vscode.window.showInformationMessage(message, update, dontCheck);
     if (response === update) {
       common.installLatest(this);
     } else if (response === dontCheck) {
@@ -139,36 +126,29 @@ class UI {
   }
 
   get clangdPath(): string {
-    let p = '';
-    switch (os.platform()) {
-      case 'linux':
-        p = config.getSecure<string>('pathLinux', this.workspaceState)!;
-        break;
-      case 'win32':
-        p = config.getSecure<string>('pathWindows', this.workspaceState)!;
-        break;
-      case 'darwin':
-        p = config.getSecure<string>('pathMac', this.workspaceState)!;
-        break;
-    }
+    let p = config.getSecure<string>(getClangdPathConfKey(), this.workspaceState)!;
     // Backwards compatibility: if it's a relative path with a slash, interpret
     // relative to project root.
     if (!path.isAbsolute(p) && p.includes(path.sep) &&
-        vscode.workspace.rootPath !== undefined)
+      vscode.workspace.rootPath !== undefined)
       p = path.join(vscode.workspace.rootPath, p);
     return p;
   }
   set clangdPath(p: string) {
-    switch (os.platform()) {
-      case 'linux':
-        config.update('pathLinux', p, vscode.ConfigurationTarget.Global);
-        break;
-      case 'win32':
-        config.update('pathWindows', p, vscode.ConfigurationTarget.Global);
-        break;
-      case 'darwin':
-        config.update('pathMac', p, vscode.ConfigurationTarget.Global);
-        break;
-    }
+    config.update(getClangdPathConfKey(), p, vscode.ConfigurationTarget.Global);
+  }
+}
+
+// get clangd path config key
+function getClangdPathConfKey(): string {
+  switch (os.platform()) {
+    case 'linux':
+      return 'pathLinux';
+    case 'win32':
+      return 'pathWindows';
+    case 'darwin':
+      return 'pathMac';
+    default:
+      return 'pathLinux';
   }
 }

@@ -2,7 +2,7 @@
     "name": "vscode-clangd",
     "displayName": "forkclangd",
     "description": "C and C++ completion, navigation, and insights",
-    "version": "0.1.14",
+    "version": "0.1.15",
     "publisher": "flywine",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
