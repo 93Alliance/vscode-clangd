@@ -200,6 +200,21 @@ export class ClangdContext implements vscode.Disposable {
     });
   }
 
+  async clangdDocumentSymbol(): Promise<any> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return null;
+    }
+    const position = editor.selection.active;
+    const uri = editor.document.uri;
+    return this.client.sendRequest<any>('textDocument/documentSymbol', {
+      position,
+      textDocument: {
+        uri: uri.toString(true),
+      },
+    });
+  }
+
   dispose() {
     this.subscriptions.forEach((d) => { d.dispose(); });
     this.subscriptions = []

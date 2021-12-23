@@ -5,4 +5,5 @@ export { ASTNode } from './ast';
 export interface API {
     ast(): Promise<ASTNode | null>
     hover(): Promise<any>
+    documentSymbol(): Promise<any>
 }

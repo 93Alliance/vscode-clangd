@@ -2,6 +2,7 @@ import { API, ASTNode } from './api';
 import * as vscode from 'vscode';
 
 import {ClangdContext} from './clangd-context';
+import * as fs from 'fs'
 
 /**
  *  This method is called when the extension is activated. The extension is
@@ -67,8 +68,17 @@ export async function activate(context: vscode.ExtensionContext) {
     },
     hover(): Promise<any> {
       return clangdContext.clangdHover();
+    },
+    documentSymbol(): Promise<any> {
+      return clangdContext.clangdDocumentSymbol();
     }
   };
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('clangd.documentSymbol', async () => {
+      const result = await clangdContext.clangdDocumentSymbol();
+      fs.writeFileSync("/home/vincent/a.json", JSON.stringify(result));
+    }));
 
   return api;
 }
