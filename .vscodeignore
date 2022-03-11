@@ -6,4 +6,3 @@ src/**
 **/*.map
 tsconfig.json
 DEVELOPING.md
-node_modules/**
