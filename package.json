@@ -2,7 +2,7 @@
     "name": "vscode-clangd",
     "displayName": "forkclangd",
     "description": "C/C++ completion, navigation, and insights",
-    "version": "0.1.19",
+    "version": "0.1.20",
     "publisher": "flywine",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
@@ -31,11 +31,10 @@
         "onCommand:clangd.install",
         "onCommand:clangd.update"
     ],
-    "main": "./out/bundle",
+    "main": "./out/src/extension",
     "scripts": {
-        "esbuild": "esbuild ./src/extension.ts --bundle --outfile=out/bundle.js --external:vscode --format=cjs --platform=node",
-        "vscode:prepublish": "npm run esbuild -- --minify",
-        "compile": "npm run esbuild -- --sourcemap --watch",
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
         "format": "clang-format -i --glob=\"{src,test}/*.ts\"",
         "test": "tsc -p ./ && node ./out/test/index.js",
         "package": "vsce package --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
