@@ -51,6 +51,7 @@ class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
         capabilities.textDocument?.completion;
     extendedCompletionCapabilities.editsNearCursor = true;
   }
+  getState(): vscodelc.FeatureState { return {kind: 'static'}; }
   dispose() {}
 }
 
@@ -58,17 +59,15 @@ export class ClangdContext implements vscode.Disposable {
   subscriptions: vscode.Disposable[] = [];
   client!: ClangdLanguageClient;
 
-  async activate(globalStoragePath: string, outputChannel: vscode.OutputChannel,
-                 workspaceState: vscode.Memento) {
-    const clangdPath =
-        await install.activate(this, globalStoragePath, workspaceState);
+  async activate(globalStoragePath: string,
+                 outputChannel: vscode.OutputChannel) {
+    const clangdPath = await install.activate(this, globalStoragePath);
     if (!clangdPath)
       return;
 
     const clangd: vscodelc.Executable = {
       command: clangdPath,
-      args:
-          await config.getSecureOrPrompt<string[]>('arguments', workspaceState),
+      args: await config.get<string[]>('arguments'),
       options: {cwd: vscode.workspace.rootPath || process.cwd()}
     };
     const traceFile = config.get<string>('trace');
@@ -115,6 +114,12 @@ export class ClangdContext implements vscode.Disposable {
                 new vscode.Range((item.range as vscode.Range).start, position))
             if (prefix)
             item.filterText = prefix + '_' + item.filterText;
+            // Workaround for https://github.com/clangd/vscode-clangd/issues/357
+            // clangd's used of commit-characters was well-intentioned, but
+            // overall UX is poor. Due to vscode-languageclient bugs, we didn't
+            // notice until the behavior was in several releases, so we need
+            // to override it on the client.
+            item.commitCharacters = [];
             return item;
           })
           return new vscode.CompletionList(items, /*isIncomplete=*/ true);
@@ -156,7 +161,7 @@ export class ClangdContext implements vscode.Disposable {
     memoryUsage.activate(this);
     ast.activate(this);
     openConfig.activate(this);
-    this.subscriptions.push(this.client.start());
+    this.client.start();
     console.log('Clang Language Server is now active!');
     fileStatus.activate(this);
     switchSourceHeader.activate(this);
@@ -214,6 +219,8 @@ export class ClangdContext implements vscode.Disposable {
 
   dispose() {
     this.subscriptions.forEach((d) => { d.dispose(); });
+    if (this.client)
+      this.client.stop();
     this.subscriptions = []
   }
 }

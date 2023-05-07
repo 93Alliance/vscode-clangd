@@ -2,7 +2,7 @@
     "name": "vscode-clangd",
     "displayName": "forkclangd",
     "description": "C/C++ completion, navigation, and insights",
-    "version": "0.1.23",
+    "version": "0.1.24",
     "publisher": "flywine",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
@@ -34,9 +34,9 @@
     "main": "./out/bundle",
     "scripts": {
         "esbuild": "esbuild ./src/extension.ts --bundle --outfile=out/bundle.js --external:vscode --format=cjs --platform=node",
-        "vscode:prepublish": "npm run esbuild -- --minify",
-        "compile": "npm run esbuild -- --sourcemap --watch",
-        "ts-compile": "tsc -watch -p ./",
+        "vscode:prepublish": "npm run check-ts && npm run esbuild -- --minify --keep-names",
+        "compile": "npm run esbuild -- --sourcemap",
+        "check-ts": "tsc -noEmit -p ./",
         "format": "clang-format -i --glob=\"{src,test}/*.ts\"",
         "test": "tsc -p ./ && node ./out/test/index.js",
         "package": "vsce package --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
@@ -45,22 +45,22 @@
         "git-clang-format": "git-clang-format --extensions=ts"
     },
     "dependencies": {
-        "@clangd/install": "0.1.4",
+        "@clangd/install": "0.1.16",
         "abort-controller": "^3.0.0",
-        "vscode-languageclient": "7.1.0-next.1"
+        "vscode-languageclient": "8.0.2"
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
         "@types/mocha": "^7.0.2",
         "@types/node": "^6.0.40",
         "@types/vscode": "1.65.0",
-        "clang-format": "1.6.0",
+        "clang-format": "^1.7.0",
         "esbuild": "^0.14.13",
         "glob": "^7.1.4",
         "mocha": "^9.2.0",
-        "ovsx": "^0.2.1",
-        "typescript": "^3.8.3",
-        "vsce": "^1.93.0",
+        "ovsx": "^0.3.0",
+        "typescript": "^4.5.5",
+        "vsce": "^2.7.0",
         "vscode-test": "^1.3.0"
     },
     "repository": {
@@ -68,6 +68,13 @@
         "url": "https://github.com/clangd/vscode-clangd.git"
     },
     "qna": "marketplace",
+    "capabilities": {
+        "untrustedWorkspaces": {
+            "supported": "limited",
+            "description": "In restricted mode clangd.path and clangd.arguments are not respected.",
+            "restrictedConfigurations": ["clangd.path", "clangd.arguments"]
+        }
+    },
     "contributes": {
         "languages": [
             {
@@ -254,7 +261,8 @@
             {
                 "command": "clangd.inlayHints.toggle",
                 "category": "clangd",
-                "title": "Toggle inlay hints"
+                "title": "Toggle inlay hints",
+                "enablement": "clangd.inlayHints.supported"
             }
         ],
         "keybindings": [

@@ -1,5 +1,52 @@
 # Change Log
 
+## Version 0.1.24: April 21, 2023
+
+- Fix an undefined object access in ClangdContext.dispose() [#461](https://github.com/clangd/vscode-clangd/pull/461)
+- Remove custom secure configuration items and rely on workspace trust from vscode [#451](https://github.com/clangd/vscode-clangd/pull/451)
+
+## Version 0.1.23: October 23, 2022
+
+* Update vscode-language client to 8.0.2, with apparent bugfixes
+* clangd autoupdate: correctly detect versions of distro-modified clangd
+* clangd autoupdate: improved error messages
+* fix clangd not detected due to permission issues [#267](https://github.com/clangd/vscode-clangd/issues/267)
+
+## Version 0.1.22: October 12, 2022
+
+* Type-hierarchy: Prefer standard/extension version of the feature depending on
+  the clangd, rather than showing both.
+
+## Version 0.1.21: July 15, 2022
+
+* Fix: clangd status bar is missing, [#362](https://github.com/clangd/vscode-clangd/issues/362)
+
+## Version 0.1.20: July 12, 2022
+
+* Update to vscode-languageclient 8. this enables standard LSP inlay hints with a recent clangd, and may carry other behavior changes.
+* Fix inlay-hints not shown when using a standard-inlay-hint-supported clangd. [#342](https://github.com/clangd/vscode-clangd/issues/342)
+* "toggle inlay hints" command now respects the 4 states on/off/onUnlessPressed/offUnlessPressed
+* Commit characters in code completion are explicitly disable (previously ignored due to a bug, see [#357]https://github.com/clangd/vscode-clangd/issues/357)).
+
+## Version 0.1.19: July 11, 2022
+
+* This is a rollback to address regressions in code completion introduced by 0.1.18.
+* Unfortunately this breaks inlay hints again by reverting #342.
+
+## Version 0.1.18: July 11, 2022
+
+* Fix inlay-hints not shown when using a standard-inlay-hint-supported clangd. [#342](https://github.com/clangd/vscode-clangd/issues/342)
+
+## Version 0.1.17: May 4, 2022
+
+* Fix errors in "download language server" command introduced in 0.1.16. [#325](https://github.com/clangd/vscode-clangd/issues/325)
+
+## Version 0.1.16: April 25, 2022
+
+* Fix: "command clangd.inlayHints.toggle already exists" error on restarting clangd, [#302](https://github.com/clangd/vscode-clangd/pull/302)
+* Inlay hints: switch to use VSCode's native implementation, [#301](https://github.com/clangd/vscode-clangd/pull/301)
+* Bundle extension code into a single js file, reducing vsix file size, [#287](https://github.com/clangd/vscode-clangd/pull/287)
+
 ## Version 0.1.15: January 27, 2022
 
 * Fix: clangd extension fails to restart, [#291](https://github.com/clangd/vscode-clangd/pull/291)

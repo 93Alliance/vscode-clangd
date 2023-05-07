@@ -21,12 +21,10 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
       vscode.commands.registerCommand('clangd.restart', async () => {
         await clangdContext.dispose();
-        await clangdContext.activate(context.globalStorageUri.fsPath, outputChannel,
-                                     context.workspaceState);
+        await clangdContext.activate(context.globalStoragePath, outputChannel);
       }));
 
-  await clangdContext.activate(context.globalStorageUri.fsPath, outputChannel,
-                               context.workspaceState);
+  await clangdContext.activate(context.globalStoragePath, outputChannel);
 
   const shouldCheck = vscode.workspace.getConfiguration('clangd').get(
       'detectExtensionConflicts');
@@ -36,8 +34,9 @@ export async function activate(context: vscode.ExtensionContext) {
       if (cppTools && cppTools.isActive) {
         const cppToolsConfiguration =
             vscode.workspace.getConfiguration('C_Cpp');
-        const cppToolsEnabled = cppToolsConfiguration.get('intelliSenseEngine');
-        if (cppToolsEnabled !== 'Disabled') {
+        const cppToolsEnabled =
+            cppToolsConfiguration.get<string>('intelliSenseEngine');
+        if (cppToolsEnabled?.toLowerCase() !== 'disabled') {
           vscode.window
               .showWarningMessage(
                   'You have both the Microsoft C++ (cpptools) extension and ' +
@@ -47,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
               .then(selection => {
                 if (selection == 'Disable IntelliSense') {
                   cppToolsConfiguration.update(
-                      'intelliSenseEngine', 'Disabled',
+                      'intelliSenseEngine', 'disabled',
                       vscode.ConfigurationTarget.Global);
                 } else if (selection == 'Never show this warning') {
                   vscode.workspace.getConfiguration('clangd').update(
